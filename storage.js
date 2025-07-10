@@ -4,9 +4,9 @@ const DB_VERSION = 1;
 
 let db;
 
-// НАКОПЛЕНИЯ: Новые категории
+// Категории доходов и расходов
 const incomeCategories = ["Пенсия"];
-const expenseCategories = ["Кварплата"];
+const expenseCategories = ["Продукты", "Бытхимия", "Кредит", "Связь", "Страховка", "Техника", "Другое", "Кварплата"];
 
 export const openDB = () => {
   return new Promise((resolve, reject) => {
