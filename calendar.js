@@ -1,5 +1,6 @@
 import { getDayData, getMonthData } from './storage.js';
 import { openDayModal } from './modal.js';
+import { calculateMonthlyInterest } from './app.js';
 
 const calendarModule = document.getElementById('calendar-module');
 const currentMonthYearEl = document.getElementById('currentMonthYear');
@@ -31,6 +32,10 @@ const navigateMonth = (direction) => {
   
   localStorage.setItem('currentMonth', currentMonth);
   localStorage.setItem('currentYear', currentYear);
+  
+  // Начисление процентов при смене месяца
+  calculateMonthlyInterest();
+  
   renderCalendar();
   document.dispatchEvent(new CustomEvent('monthChanged'));
 };
