@@ -17,6 +17,11 @@ export const initReportModule = () => {
     document.addEventListener('monthChanged', () => {
         currentMonth = parseInt(localStorage.getItem('currentMonth'));
         currentYear = parseInt(localStorage.getItem('currentYear'));
+        
+        // Если отчет открыт - обновить данные
+        if (reportModule.style.display === 'block') {
+            openReport();
+        }
     });
 };
 
