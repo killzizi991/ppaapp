@@ -4,9 +4,126 @@ const modalRoot = document.getElementById('modal-root');
 const expenseCategories = ["Продукты", "Бытхимия", "Кредит", "Связь", "Страховка", "Техника", "Другое", "Кварплата"];
 const incomeCategories = ["Пенсия"];
 
-// НАКОПЛЕНИЯ: Глобальная ссылка на контейнер целей
+// Глобальная ссылка на контейнер целей
 let savingsContainer = null;
 
+// Глобальные данные накоплений
+let savings = [];
+
+// Загрузка целей из localStorage
+function loadSavings() {
+  const saved = localStorage.getItem('savings');
+  if (saved) {
+    try {
+      savings = JSON.parse(saved);
+    } catch (e) {
+      console.error('Ошибка загрузки целей:', e);
+      savings = [];
+    }
+  }
+}
+
+// Сохранение целей в localStorage
+function saveSavings() {
+  localStorage.setItem('savings', JSON.stringify(savings));
+}
+
+// Создание новой цели
+function createGoal(name, isPercentage = false, rate = 0) {
+  return {
+    id: Date.now().toString(),
+    name,
+    balance: 0,
+    isPercentage,
+    rate,
+    transactions: []
+  };
+}
+
+// Пополнение цели
+function addToGoal(goalId, amount) {
+  const goal = savings.find(g => g.id === goalId);
+  if (!goal || amount <= 0) return;
+  
+  goal.balance += amount;
+  goal.transactions.push({
+    date: new Date().toISOString(),
+    amount
+  });
+  
+  saveSavings();
+}
+
+// Обновление процентной ставки
+function updateGoalRate(goalId, newRate) {
+  const goal = savings.find(g => g.id === goalId);
+  if (!goal) return;
+  
+  goal.rate = newRate;
+  saveSavings();
+}
+
+// Удаление цели
+function deleteGoal(goalId) {
+  savings = savings.filter(g => g.id !== goalId);
+  saveSavings();
+}
+
+// Отрисовка целей в модальном окне
+function renderSavings() {
+  if (!savingsContainer) return;
+  
+  savingsContainer.innerHTML = '';
+  
+  if (savings.length === 0) {
+    savingsContainer.innerHTML = '<p class="no-goals">Нет созданных целей. Нажмите "+ Добавить цель"</p>';
+    return;
+  }
+  
+  savings.forEach(goal => {
+    const goalEl = document.createElement('div');
+    goalEl.className = 'savings-goal';
+    
+    goalEl.innerHTML = `
+      <div class="savings-header">
+        <div class="goal-name">${goal.name}</div>
+        <div class="goal-balance">${goal.balance.toFixed(2)} ₽</div>
+      </div>
+      
+      ${goal.isPercentage ? 
+        `<div class="percentage-badge">${goal.rate}% в месяц</div>` : ''}
+      
+      <div class="savings-actions">
+        <button class="savings-btn add-money-btn" data-id="${goal.id}">Пополнить</button>
+        ${goal.isPercentage ? 
+          `<button class="savings-btn edit-rate-btn" data-id="${goal.id}">Изменить %</button>` : ''}
+        <button class="savings-btn delete-goal-btn" data-id="${goal.id}">Удалить</button>
+      </div>
+    `;
+    
+    savingsContainer.appendChild(goalEl);
+  });
+  
+  // Добавляем обработчики событий
+  savingsContainer.querySelectorAll('.add-money-btn').forEach(btn => {
+    btn.addEventListener('click', () => openAddMoneyModal(btn.dataset.id));
+  });
+  
+  savingsContainer.querySelectorAll('.edit-rate-btn').forEach(btn => {
+    btn.addEventListener('click', () => openEditRateModal(btn.dataset.id));
+  });
+  
+  savingsContainer.querySelectorAll('.delete-goal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (confirm('Удалить цель накопления? Все данные будут потеряны.')) {
+        deleteGoal(btn.dataset.id);
+        renderSavings();
+      }
+    });
+  });
+}
+
+// Модальное окно дня
 export const openDayModal = (dateString, dayData = null) => {
     modalRoot.innerHTML = '';
     
@@ -54,6 +171,11 @@ export const openDayModal = (dateString, dayData = null) => {
         option.textContent = category;
         incomeSelect.appendChild(option);
     });
+    
+    // Выбираем сохраненную категорию
+    if (dayData?.incomeCategory) {
+        incomeSelect.value = dayData.incomeCategory;
+    }
     
     incomeGroup.appendChild(incomeLabel);
     incomeGroup.appendChild(incomeSelect);
@@ -110,7 +232,8 @@ export const openDayModal = (dateString, dayData = null) => {
         };
         
         expenseCategories.forEach(category => {
-            const value = parseFloat(expensesGroup.querySelector(`#expense-${category}`).value) || 0;
+            const input = expensesGroup.querySelector(`#expense-${category}`);
+            const value = parseFloat(input.value) || 0;
             formData.expenses[category] = value;
         });
         
@@ -130,7 +253,8 @@ export const openDayModal = (dateString, dayData = null) => {
     const updateBalance = () => {
         const revenue = parseFloat(revenueGroup.querySelector('input').value) || 0;
         const expenses = expenseCategories.reduce((sum, category) => {
-            const value = parseFloat(expensesGroup.querySelector(`#expense-${category}`).value) || 0;
+            const input = expensesGroup.querySelector(`#expense-${category}`);
+            const value = parseFloat(input.value) || 0;
             return sum + value;
         }, 0);
         
@@ -159,7 +283,7 @@ export const openDayModal = (dateString, dayData = null) => {
     modal.style.animation = 'slideUp 0.3s forwards';
 };
 
-// НАКОПЛЕНИЯ: Модальное окно управления накоплениями
+// Модальное окно управления накоплениями
 export const openSavingsModal = () => {
     modalRoot.innerHTML = '';
     
@@ -200,7 +324,7 @@ export const openSavingsModal = () => {
     modal.style.animation = 'slideUp 0.3s forwards';
 };
 
-// НАКОПЛЕНИЯ: Модальное окно создания цели
+// Модальное окно создания цели
 export const openAddGoalModal = () => {
     modalRoot.innerHTML = '';
     
@@ -266,15 +390,7 @@ export const openAddGoalModal = () => {
         }
         
         // Создаем и сохраняем цель
-        const newGoal = {
-            id: Date.now().toString(),
-            name,
-            balance: 0,
-            isPercentage,
-            rate,
-            transactions: []
-        };
-        
+        const newGoal = createGoal(name, isPercentage, rate);
         savings.push(newGoal);
         saveSavings();
         openSavingsModal(); // Возвращаемся к основному окну накоплений
@@ -284,7 +400,7 @@ export const openAddGoalModal = () => {
     modal.querySelector('.close-button').addEventListener('click', openSavingsModal);
 };
 
-// НАКОПЛЕНИЯ: Модальное окно пополнения цели
+// Модальное окно пополнения цели
 export const openAddMoneyModal = (goalId) => {
     const goal = savings.find(g => g.id === goalId);
     if (!goal) return;
@@ -341,7 +457,7 @@ export const openAddMoneyModal = (goalId) => {
     modal.querySelector('.close-button').addEventListener('click', openSavingsModal);
 };
 
-// НАКОПЛЕНИЯ: Модальное окно изменения ставки
+// Модальное окно изменения ставки
 export const openEditRateModal = (goalId) => {
     const goal = savings.find(g => g.id === goalId);
     if (!goal || !goal.isPercentage) return;
@@ -398,108 +514,6 @@ export const openEditRateModal = (goalId) => {
     modal.querySelector('.close-button').addEventListener('click', openSavingsModal);
 };
 
-// НАКОПЛЕНИЯ: Функции для работы с целями
-let savings = [];
-
-function loadSavings() {
-  const saved = localStorage.getItem('savings');
-  if (saved) {
-    try {
-      savings = JSON.parse(saved);
-    } catch (e) {
-      console.error('Ошибка загрузки целей:', e);
-      savings = [];
-    }
-  }
-}
-
-function saveSavings() {
-  localStorage.setItem('savings', JSON.stringify(savings));
-}
-
-function addToGoal(goalId, amount) {
-  const goal = savings.find(g => g.id === goalId);
-  if (!goal || amount <= 0) return;
-  
-  goal.balance += amount;
-  goal.transactions.push({
-    date: new Date().toISOString(),
-    amount
-  });
-  
-  saveSavings();
-}
-
-function updateGoalRate(goalId, newRate) {
-  const goal = savings.find(g => g.id === goalId);
-  if (!goal) return;
-  
-  goal.rate = newRate;
-  saveSavings();
-}
-
-function deleteGoal(goalId) {
-  savings = savings.filter(g => g.id !== goalId);
-  saveSavings();
-}
-
-// НАКОПЛЕНИЯ: Отрисовка целей в модальном окне
-function renderSavings() {
-  if (!savingsContainer) return;
-  
-  savingsContainer.innerHTML = '';
-  
-  if (savings.length === 0) {
-    savingsContainer.innerHTML = '<p class="no-goals">Нет созданных целей. Нажмите "+ Добавить цель"</p>';
-    return;
-  }
-  
-  savings.forEach(goal => {
-    const goalEl = document.createElement('div');
-    goalEl.className = 'savings-goal';
-    
-    goalEl.innerHTML = `
-      <div class="savings-header">
-        <div class="goal-name">${goal.name}</div>
-        <div class="goal-balance">${goal.balance.toFixed(2)} ₽</div>
-      </div>
-      
-      ${goal.isPercentage ? 
-        `<div class="percentage-badge">${goal.rate}% в месяц</div>` : ''}
-      
-      <div class="savings-actions">
-        <button class="savings-btn add-money-btn" data-id="${goal.id}">Пополнить</button>
-        ${goal.isPercentage ? 
-          `<button class="savings-btn edit-rate-btn" data-id="${goal.id}">Изменить %</button>` : ''}
-        <button class="savings-btn delete-goal-btn" data-id="${goal.id}">Удалить</button>
-      </div>
-    `;
-    
-    savingsContainer.appendChild(goalEl);
-  });
-  
-  // Добавляем обработчики событий
-  savingsContainer.querySelectorAll('.add-money-btn').forEach(btn => {
-    btn.addEventListener('click', () => openAddMoneyModal(btn.dataset.id));
-  });
-  
-  savingsContainer.querySelectorAll('.edit-rate-btn').forEach(btn => {
-    btn.addEventListener('click', () => openEditRateModal(btn.dataset.id));
-  });
-  
-  savingsContainer.querySelectorAll('.delete-goal-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (confirm('Удалить цель накопления? Все данные будут потеряны.')) {
-        deleteGoal(btn.dataset.id);
-        renderSavings();
-      }
-    });
-  });
-}
-
-// Инициализация при первой загрузке
-loadSavings();
-
 function closeModal() {
     modalRoot.innerHTML = '';
 }
@@ -537,3 +551,6 @@ function calculateBalance(dayData) {
     const expenses = dayData.expenses ? Object.values(dayData.expenses).reduce((sum, val) => sum + val, 0) : 0;
     return (dayData.revenue - expenses).toLocaleString('ru-RU');
 }
+
+// Инициализация при первой загрузке
+loadSavings();
