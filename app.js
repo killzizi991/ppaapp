@@ -1,6 +1,6 @@
 import { initCalendar } from './calendar.js';
 import { initReportModule } from './report.js';
-import { openAddGoalModal, openAddMoneyModal, openEditRateModal } from './modal.js';
+import { openAddGoalModal, openAddMoneyModal, openEditRateModal, openSavingsModal } from './modal.js';
 
 // НАКОПЛЕНИЯ: Глобальные переменные
 let savings = [];
@@ -91,6 +91,11 @@ function renderSavings() {
   
   container.innerHTML = '';
   
+  if (savings.length === 0) {
+    container.innerHTML = '<p>Нет целей накоплений. Нажмите "+ Добавить цель"</p>';
+    return;
+  }
+  
   savings.forEach(goal => {
     const goalEl = document.createElement('div');
     goalEl.className = 'savings-goal';
@@ -136,12 +141,11 @@ function renderSavings() {
 // НАКОПЛЕНИЯ: Инициализация модуля
 function initSavingsModule() {
   loadSavings();
-  renderSavings();
   
-  // Обработчик кнопки добавления цели
-  const addGoalBtn = document.getElementById('add-goal-btn');
-  if (addGoalBtn) {
-    addGoalBtn.addEventListener('click', openAddGoalModal);
+  // Обработчик кнопки накоплений
+  const savingsBtn = document.getElementById('savingsBtn');
+  if (savingsBtn) {
+    savingsBtn.addEventListener('click', openSavingsModal);
   }
 }
 
