@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+    // Перенаправляем все запросы на главную страницу приложения
+    const path = window.location.pathname.replace('/ppapp', '');
+    window.location.href = `/ppapp/index.html#${path}`;
+  </script>
+</head>
+<body>
+  Redirecting...
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2196F3">
+    <title>Финансовый трекер</title>
+    <link rel="manifest" href="/ppapp/manifest.webmanifest">
+    <link rel="stylesheet" href="/ppapp/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="app-header">
+        <button id="installBtn" style="display: none;">Установить</button>
+        <h1>Финансовый трекер</h1>
+        <div class="period-navigator">
+            <button id="prevMonthBtn">&lt;</button>
+            <h2 id="currentMonthYear">Июль 2025</h2>
+            <button id="nextMonthBtn">&gt;</button>
+        </div>
+    </header>
+
+    <main>
+        <section id="calendar-module" class="calendar-module"></section>
+        <div id="modal-root"></div>
+        <div id="report-module" class="report-module" style="display: none;">
+            <h2>Отчет за месяц</h2>
+            <div id="report-content"></div>
+            <button id="closeReportBtn">Закрыть</button>
+        </div>
+    </main>
+
+    <footer class="app-footer">
+        <button id="reportBtn">Отчет</button>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/2.29.3/date_fns.min.js"></script>
+    <script src="/ppapp/app.js" type="module"></script>
+</body>
+</html>
