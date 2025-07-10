@@ -1,11 +1,11 @@
 import { initCalendar } from './calendar.js';
 import { initReportModule } from './report.js';
-import { openAddGoalModal, openAddMoneyModal, openEditRateModal, openSavingsModal } from './modal.js';
+import { openSavingsModal } from './modal.js';
 
-// НАКОПЛЕНИЯ: Глобальные переменные
+// Глобальные переменные накоплений
 let savings = [];
 
-// НАКОПЛЕНИЯ: Загрузка целей из localStorage
+// Загрузка целей из localStorage
 function loadSavings() {
   const saved = localStorage.getItem('savings');
   if (saved) {
@@ -18,56 +18,12 @@ function loadSavings() {
   }
 }
 
-// НАКОПЛЕНИЯ: Сохранение целей в localStorage
+// Сохранение целей в localStorage
 function saveSavings() {
   localStorage.setItem('savings', JSON.stringify(savings));
 }
 
-// НАКОПЛЕНИЯ: Создание новой цели
-function createGoal(name, isPercentage = false, rate = 0) {
-  return {
-    id: Date.now().toString(),
-    name,
-    balance: 0,
-    isPercentage,
-    rate,
-    transactions: []
-  };
-}
-
-// НАКОПЛЕНИЯ: Пополнение цели
-function addToGoal(goalId, amount) {
-  const goal = savings.find(g => g.id === goalId);
-  if (!goal || amount <= 0) return;
-  
-  goal.balance += amount;
-  goal.transactions.push({
-    date: new Date().toISOString(),
-    amount
-  });
-  
-  saveSavings();
-  renderSavings();
-}
-
-// НАКОПЛЕНИЯ: Обновление процентной ставки
-function updateGoalRate(goalId, newRate) {
-  const goal = savings.find(g => g.id === goalId);
-  if (!goal) return;
-  
-  goal.rate = newRate;
-  saveSavings();
-  renderSavings();
-}
-
-// НАКОПЛЕНИЯ: Удаление цели
-function deleteGoal(goalId) {
-  savings = savings.filter(g => g.id !== goalId);
-  saveSavings();
-  renderSavings();
-}
-
-// НАКОПЛЕНИЯ: Начисление процентов
+// Начисление процентов
 function calculateMonthlyInterest() {
   savings.forEach(goal => {
     if (goal.isPercentage && goal.rate > 0 && goal.balance > 0) {
@@ -81,65 +37,10 @@ function calculateMonthlyInterest() {
     }
   });
   saveSavings();
-  renderSavings();
 }
 
-// НАКОПЛЕНИЯ: Отрисовка целей
-function renderSavings() {
-  const container = document.getElementById('savings-container');
-  if (!container) return;
-  
-  container.innerHTML = '';
-  
-  if (savings.length === 0) {
-    container.innerHTML = '<p>Нет целей накоплений. Нажмите "+ Добавить цель"</p>';
-    return;
-  }
-  
-  savings.forEach(goal => {
-    const goalEl = document.createElement('div');
-    goalEl.className = 'savings-goal';
-    
-    goalEl.innerHTML = `
-      <div class="savings-header">
-        <div class="goal-name">${goal.name}</div>
-        <div class="goal-balance">${goal.balance.toFixed(2)} ₽</div>
-      </div>
-      
-      ${goal.isPercentage ? 
-        `<div class="percentage-badge">${goal.rate}% в месяц</div>` : ''}
-      
-      <div class="savings-actions">
-        <button class="savings-btn add-money-btn" data-id="${goal.id}">Пополнить</button>
-        ${goal.isPercentage ? 
-          `<button class="savings-btn edit-rate-btn" data-id="${goal.id}">Изменить %</button>` : ''}
-        <button class="savings-btn delete-goal-btn" data-id="${goal.id}">Удалить</button>
-      </div>
-    `;
-    
-    container.appendChild(goalEl);
-  });
-  
-  // Добавляем обработчики событий
-  document.querySelectorAll('.add-money-btn').forEach(btn => {
-    btn.addEventListener('click', () => openAddMoneyModal(btn.dataset.id));
-  });
-  
-  document.querySelectorAll('.edit-rate-btn').forEach(btn => {
-    btn.addEventListener('click', () => openEditRateModal(btn.dataset.id));
-  });
-  
-  document.querySelectorAll('.delete-goal-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (confirm('Удалить цель накопления? Все данные будут потеряны.')) {
-        deleteGoal(btn.dataset.id);
-      }
-    });
-  });
-}
-
-// НАКОПЛЕНИЯ: Инициализация модуля
-function initSavingsModule() {
+// Инициализация модуля накоплений
+export const initSavingsModule = () => {
   loadSavings();
   
   // Обработчик кнопки накоплений
@@ -187,5 +88,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Инициализация модулей
   await initCalendar();
   initReportModule();
-  initSavingsModule(); // Инициализация модуля накоплений
+  initSavingsModule();
 });
