@@ -416,3 +416,16 @@ body {
     padding: 1rem;
   }
 }
+
+/* Добавить в конец файла */
+
+.income-categories {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.income-categories .category-item {
+  color: var(--income-color);
+}
