@@ -18,7 +18,6 @@ export const initReportModule = () => {
         currentMonth = parseInt(localStorage.getItem('currentMonth'));
         currentYear = parseInt(localStorage.getItem('currentYear'));
         
-        // Если отчет открыт - обновить данные
         if (reportModule.style.display === 'block') {
             openReport();
         }
@@ -32,6 +31,7 @@ async function openReport() {
     let totalClients = 0;
     let daysWithData = 0;
     const categoryTotals = {};
+    const incomeCategoryTotals = {};
     
     Object.values(monthData).forEach(day => {
         totalRevenue += day.revenue || 0;
@@ -39,6 +39,15 @@ async function openReport() {
         
         if (day.revenue > 0 || day.clients > 0) daysWithData++;
         
+        // Учет категорий доходов
+        if (day.incomeCategory) {
+            if (!incomeCategoryTotals[day.incomeCategory]) {
+                incomeCategoryTotals[day.incomeCategory] = 0;
+            }
+            incomeCategoryTotals[day.incomeCategory] += day.revenue || 0;
+        }
+        
+        // Учет категорий расходов
         if (day.expenses) {
             Object.entries(day.expenses).forEach(([category, amount]) => {
                 if (!categoryTotals[category]) categoryTotals[category] = 0;
@@ -57,18 +66,31 @@ async function openReport() {
                 <span>Общая выручка:</span>
                 <span class="income-value">${totalRevenue.toLocaleString('ru-RU')} ₽</span>
             </div>
+            
             <div class="report-item">
                 <span>Среднее количество клиентов:</span>
                 <span>${avgClients}</span>
             </div>
+            
             <div class="report-item">
                 <span>Общие расходы:</span>
                 <span class="expense-value">${totalExpenses.toLocaleString('ru-RU')} ₽</span>
             </div>
+            
             <div class="report-item">
                 <span>Итоговый баланс:</span>
                 <span class="${balance >= 0 ? 'income-value' : 'expense-value'}">${balance.toLocaleString('ru-RU')} ₽</span>
             </div>
+        </div>
+        
+        <h3>Доходы по категориям</h3>
+        <div class="income-categories">
+            ${Object.entries(incomeCategoryTotals).map(([category, total]) => `
+                <div class="category-item">
+                    <span>${category}:</span>
+                    <span class="income-value">${total.toLocaleString('ru-RU')} ₽</span>
+                </div>
+            `).join('')}
         </div>
         
         <h3>Расходы по категориям</h3>
